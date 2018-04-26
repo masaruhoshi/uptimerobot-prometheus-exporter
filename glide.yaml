@@ -5,6 +5,4 @@ import:
   version: v0.8.0
   subpackages:
   - prometheus
-- package: gopkg.in/mgo.v2
-  subpackages:
-  - bson
+- package: github.com/gbl08ma/uptimerobot-api
