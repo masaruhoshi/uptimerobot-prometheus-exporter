@@ -7,7 +7,7 @@ RUN cd /go/src/github.com/masaruhoshi/uptimerobot-prometheus-exporter && make re
 
 FROM       alpine:3.4
 MAINTAINER Masaru Hoshi <hoshi@hoshi.com.br>
-EXPOSE     9001
+EXPOSE     9429
 
 RUN apk add --update ca-certificates
 COPY --from=builder /go/src/github.com/masaruhoshi/uptimerobot-prometheus-exporter/release/uptimerobot_exporter-linux-amd64 /usr/local/bin/uptimerobot_exporter
