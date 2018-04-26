@@ -7,7 +7,8 @@ TAG := $(shell git tag | sort -r | head -n 1)
 #	@rm *.out
 
 clean:
-	@rm *.lock uptimerobot_exporter
+	@rm -f *.lock uptimerobot_exporter
+	@rm -fr vendor/*
 
 deps:
 	glide install
