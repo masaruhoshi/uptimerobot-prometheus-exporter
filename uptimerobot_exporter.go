@@ -6,13 +6,15 @@ import (
   slog "log"
   "net/http"
   "strings"
+  "os"
 
   "github.com/golang/glog"
+  "github.com/masaruhoshi/uptimerobot-prometheus-exporter/collector"
   "github.com/prometheus/client_golang/prometheus"
 )
 
 var (
-  listenAddressFlag     = flag.String("web.listen-address", ":9001", "Address on which to expose metrics and web interface.")
+  listenAddressFlag     = flag.String("web.listen-address", ":9429", "Address on which to expose metrics and web interface.")
   metricsPathFlag       = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics.")
   authUserFlag          = flag.String("auth.user", "", "Username for basic auth.")
   authPassFlag          = flag.String("auth.pass", "", "Password for basic auth.")
@@ -84,7 +86,11 @@ func startWebServer() {
 }
 
 func registerCollector() {
-  // TODO
+  apiKey := os.Getenv("UPTIMEROBOT_API_KEY")
+  collect := collector.Collect{}
+
+  uptimerobotCollector := collector.New(apiKey, collect)
+  prometheus.MustRegister(uptimerobotCollector)
 }
 
 type bufferedLogWriter struct {
