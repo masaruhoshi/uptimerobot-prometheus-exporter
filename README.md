@@ -1,1 +1,1 @@
-# prometheus-uptimerobot
+# Uptimerobot Prometheus Exporter
