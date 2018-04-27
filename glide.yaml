@@ -1,5 +1,6 @@
 package: github.com/masaruhoshi/uptimerobot-prometheus-exporter
 import:
+- package: github.com/uptimerobot/uptimerobot-go
 - package: github.com/golang/glog
 - package: github.com/prometheus/client_golang
   version: v0.8.0
