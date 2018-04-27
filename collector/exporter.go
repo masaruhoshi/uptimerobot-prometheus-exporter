@@ -3,8 +3,7 @@ package collector
 import (
 	"time"
 
-	"github.com/uptimerobot/uptimerobot-go/api"
-
+	"github.com/masaruhoshi/uptimerobot-go/api"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 )
@@ -136,19 +135,12 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 
 	e.up.Set(1)
 	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "connection")
-	/*
-		for _, monitor := range response.Monitors {
-			scrapeTime = time.Now()
 
-			'monitor_name' = monitor.FriendlyName
-			'monitor_type' = self.MONITOR_TYPES[   monitor.ID
-			'monitor_url': monitor.URL
-			t.Logf("Monitor ID: %d", monitor.ID)
-			t.Logf("Monitor Friendly Name: %s", monitor.FriendlyName)
-			t.Logf("Monitor URL: %s", monitor.URL)
-			t.Logf("Monitor Recent Response Time(msec): %d", monitor.ResponseTimes[0].Value)
-
-			ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "connection")
-		}
-	*/
+	scrapeTime = time.Now()
+	if err = ScrapeUptimeRobot(response.Monitors, ch); err != nil {
+		log.Errorln("Error scraping for collect.uptimerobot:", err)
+		e.scrapeErrors.WithLabelValues("collect.uptimerobot").Inc()
+		e.errorDesc.Set(1)
+	}
+	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "collect.uptimerobot")
 }

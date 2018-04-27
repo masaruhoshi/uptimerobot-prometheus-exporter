@@ -9,6 +9,7 @@ TAG := $(shell git tag | sort -r | head -n 1)
 clean:
 	@rm -f *.lock uptimerobot_exporter
 	@rm -fr vendor/*
+	@rm -fr coverage.txt
 
 deps:
 	glide install
