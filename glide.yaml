@@ -6,4 +6,3 @@ import:
   version: v0.8.0
   subpackages:
   - prometheus
-- package: github.com/gbl08ma/uptimerobot-api
