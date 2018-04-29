@@ -1,15 +1,19 @@
-FROM       golang:alpine as builder
+FROM golang:alpine as builder
 
-RUN apk --no-cache add curl git make perl
-RUN curl -s https://glide.sh/get | sh
 COPY . /go/src/github.com/masaruhoshi/uptimerobot-prometheus-exporter
-RUN cd /go/src/github.com/masaruhoshi/uptimerobot-prometheus-exporter && make release
+RUN apk --update add curl git make perl && \
+    curl -s https://glide.sh/get | sh && \
+    cd /go/src/github.com/masaruhoshi/uptimerobot-prometheus-exporter && \
+    make build
 
-FROM       alpine:3.4
-MAINTAINER Masaru Hoshi <hoshi@hoshi.com.br>
-EXPOSE     9429
+FROM alpine:latest
+LABEL Authors="Masaru Hoshi <https://github.com/masaruhoshi>, Felipe Santiago <https://github.com/felipesantiago>"
 
-RUN apk add --update ca-certificates
-COPY --from=builder /go/src/github.com/masaruhoshi/uptimerobot-prometheus-exporter/release/uptimerobot_exporter-linux-amd64 /usr/local/bin/uptimerobot_exporter
+EXPOSE 9429
 
-ENTRYPOINT [ "uptimerobot_exporter" ]
+RUN apk --update add ca-certificates && \
+    rm -rf /var/cache/apk/*
+
+COPY --from=builder /go/src/github.com/masaruhoshi/uptimerobot-prometheus-exporter/uptimerobot_exporter /usr/bin/uptimerobot_exporter
+
+ENTRYPOINT [ "/usr/bin/uptimerobot_exporter" ]
