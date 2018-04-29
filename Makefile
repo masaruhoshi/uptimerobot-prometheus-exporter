@@ -1,15 +1,12 @@
-package = github.com/masaruhoshi/uptimerobot_exporter
-TAG := $(shell git tag | sort -r | head -n 1)
+package = github.com/masaruhoshi/uptimerobot-prometheus-exporter
+VERSION := $(shell cat VERSION)
 
-#test:
-#	go test github.com/masaruhoshi/uptimerobot_exporter/collector -cover -coverprofile=collector_coverage.out -short
-#	go tool cover -func=collector_coverage.out
-#	@rm *.out
+all: deps build
 
 clean:
 	@rm -f *.lock uptimerobot_exporter
+	@rm -f release/*
 	@rm -fr vendor/*
-	@rm -fr coverage.txt
 
 deps:
 	glide install
@@ -19,7 +16,11 @@ build: deps
 
 release: deps
 	mkdir -p release
-	perl -p -i -e 's/{{VERSION}}/$(TAG)/g' uptimerobot_exporter.go
-	GOOS=darwin GOARCH=amd64 go build -o release/uptimerobot_exporter-darwin-amd64 $(package)
-	GOOS=linux GOARCH=amd64 go build -o release/uptimerobot_exporter-linux-amd64 $(package)
-	perl -p -i -e 's/$(TAG)/{{VERSION}}/g' uptimerobot_exporter.go
+	perl -p -i -e 's/{{VERSION}}/$(VERSION)/g' uptimerobot_exporter.go
+	GOOS=darwin GOARCH=amd64 go build -o release/uptimerobot_exporter-$(VERSION).darwin-amd64 $(package)
+	GOOS=linux GOARCH=amd64 go build -o release/uptimerobot_exporter-$(VERSION).linux-amd64 $(package)
+	perl -p -i -e 's/$(VERSION)/{{VERSION}}/g' uptimerobot_exporter.go
+	tar -czf release/uptimerobot_exporter-$(VERSION).darwin-amd64.tar.gz \
+		release/uptimerobot_exporter-$(VERSION).darwin-amd64 && rm release/uptimerobot_exporter-$(VERSION).darwin-amd64
+	tar -czf release/uptimerobot_exporter-$(VERSION).linux-amd64.tar.gz \
+		release/uptimerobot_exporter-$(VERSION).linux-amd64 && rm release/uptimerobot_exporter-$(VERSION).linux-amd64
