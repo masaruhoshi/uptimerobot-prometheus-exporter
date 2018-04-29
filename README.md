@@ -1,6 +1,8 @@
 # Uptimerobot Prometheus Exporter
 A golang prometheus exporter for UptimeRobot.
 
+![Build Status](https://travis-ci.org/masaruhoshi/uptimerobot-prometheus-exporter.svg?branch=master)
+
 ## Building and running
 The default make file behavior is to build the binary
 
@@ -28,4 +30,3 @@ push my changes to the main repo and use it as dependency package.
 
 For additional suggestions, *please*, use the [Issues](https://github.com/masaruhoshi/uptimerobot-prometheus-exporter/issues)
 to report bugs or enhancements.
-
