@@ -4,9 +4,9 @@ VERSION := $(shell cat VERSION)
 all: deps build
 
 clean:
-	@rm -f *.lock uptimerobot-prometheus-exporter
+	@rm -f *.lock uptimerobot_exporter
+	@rm -f release/*
 	@rm -fr vendor/*
-	@rm -fr coverage.txt
 
 deps:
 	glide install
