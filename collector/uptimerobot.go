@@ -5,8 +5,9 @@ package collector
 import (
 	"strconv"
 
-	"github.com/masaruhoshi/uptimerobot-go/api"
+	"github.com/masaruhoshi/uptimerobot-go.v2/api"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/log"
 )
 
 const (
@@ -45,6 +46,7 @@ var (
 
 // ScrapeUptimeRobot : scrapes from UptimeRobot API.
 func ScrapeUptimeRobot(monitors []api.XMLMonitor, ch chan<- prometheus.Metric) error {
+	log.Infof("ScrapeUptimeRobot found %d monitors", len(monitors))
 	for _, monitor := range monitors {
 		up := 1.0
 		status, _ := strconv.ParseFloat(monitor.Status, 64)
