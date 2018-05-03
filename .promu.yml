@@ -1,0 +1,25 @@
+go:
+    cgo: true
+verbose: true
+repository:
+    path: github.com/masaruhoshi/uptimerobot-prometheus-exporter    
+build:
+    prefix: .
+    binaries:
+        - name: uptimerobot-exporter
+    flags: -a -tags 'netgo static_build'
+    ldflags: |
+        -X main.Version={{.Version}}
+        -X main.Revision={{.Revision}}
+        -X main.Branch={{.Branch}}
+        -X main.BuildDate={{date "20060102-15:04:05"}}
+tarball:
+    files:
+        - LICENSE
+crossbuild:
+    platforms:
+        - linux/amd64
+        # - darwin/amd64
+        # - linux/386
+        # - linux/arm
+        # - linux/arm64
