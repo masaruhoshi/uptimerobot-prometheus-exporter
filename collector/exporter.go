@@ -3,7 +3,7 @@ package collector
 import (
 	"time"
 
-	"github.com/masaruhoshi/uptimerobot-go/api"
+	"github.com/masaruhoshi/uptimerobot-go.v2/api"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 )
@@ -117,7 +117,8 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 
 	monitors := client.Monitors()
 	var request = api.GetMonitorsRequest{
-		MonitorId: 1,
+		ResponseTimes:      1,
+		ResponseTimesLimit: 1,
 	}
 
 	response, err := monitors.Get(request)
@@ -126,6 +127,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 		e.errorDesc.Set(1)
 		return
 	}
+	log.Infof("Response from UptimeRobot API", response)
 
 	if response == nil {
 		log.Errorln("No monitor response: %v", response)
