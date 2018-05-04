@@ -18,19 +18,22 @@ pkgs   = $(shell $(GO) list ./... | grep -v /vendor/)
 PREFIX                  ?= $(shell pwd)
 BIN_DIR                 ?= $(shell pwd)
 DOCKER_IMAGE_NAME       ?= uptimerobot-exporter
-DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
-
-all: format test build
+all: deps style format test build
 
 style:
 	@echo ">> checking code style"
 	@! gofmt -d $(shell find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
 
 clean:
-	@rm -f *.lock uptimerobot_exporter
+	@rm -f *.lock *.tar.gz uptimerobot-exporter
 	@rm -f release/*
 	@rm -fr vendor/*
+	@rm -fr .build .tarballs
+
+deps:
+	$(GO) get github.com/prometheus/promu
+	glide install
 
 test:
 	@echo ">> running tests"
@@ -52,19 +55,21 @@ tarball: promu
 	@echo ">> building release tarball"
 	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
 
-# tarballs: promu
-# 	@echo ">> building crossbuild"
-# 	@$(PROMU) crossbuild 
-# 	@echo ">> building crossbuild tarballs"
-# 	@$(PROMU) crossbuild tarballs 
+tarballs: format test promu
+	@echo ">> building crossbuild"
+	@$(PROMU) crossbuild 
+	@echo ">> building crossbuild tarballs"
+	@$(PROMU) crossbuild tarballs 
 	
-# docker: build
-# 	@echo ">> building docker image"
-# 	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
+docker: deps format 
+	@echo ">> building binary"
+	GOOS=linux GOARCH=amd64 $(GO) build -o uptimerobot-exporter
+	@echo ">> building docker image"
+	@docker build -t "$(DOCKER_IMAGE_NAME)" .
 
-promu:
+promu: deps
 	@GOOS=$(shell uname -s | tr A-Z a-z) \
 	        GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-	        $(GO) get -v github.com/prometheus/promu
+	        $(GO) get github.com/prometheus/promu
 
 .PHONY: all style format build test vet tarball tarballs docker promu
