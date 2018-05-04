@@ -45,41 +45,77 @@ var (
 )
 
 // ScrapeUptimeRobot : scrapes from UptimeRobot API.
-func ScrapeUptimeRobot(monitors []api.XMLMonitor, ch chan<- prometheus.Metric) error {
-	log.Infof("ScrapeUptimeRobot found %d monitors", len(monitors))
-	for _, monitor := range monitors {
-		up := 1.0
-		status, _ := strconv.ParseFloat(monitor.Status, 64)
-		responseTime := float64(monitor.ResponseTimes[0].Value)
-		if status != statusUp {
-			up = 0
-		}
+func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
+	offset, totalScraped, totalMonitors := 0, 0, 0
 
-		ch <- prometheus.MustNewConstMetric(
-			MonitorUpDesc,
-			prometheus.GaugeValue,
-			up,
-			monitor.FriendlyName,
-			monitor.Type,
-			monitor.URL,
-		)
-		ch <- prometheus.MustNewConstMetric(
-			MonitorStatusDesc,
-			prometheus.GaugeValue,
-			status,
-			monitor.FriendlyName,
-			monitor.Type,
-			monitor.URL,
-		)
-		ch <- prometheus.MustNewConstMetric(
-			MonitorResponseTimeDesc,
-			prometheus.GaugeValue,
-			responseTime,
-			monitor.FriendlyName,
-			monitor.Type,
-			monitor.URL,
-		)
+	for {
+		monitors, err := getMonitors(client, offset)
+		if err != nil {
+			return err
+		}
+		for _, monitor := range monitors {
+			log.Infof("ScrapeUptimeRobot found %d monitors", monitor.Pagination.Total)
+			totalMonitors = monitor.Pagination.Total
+			up := 1.0
+			status, _ := strconv.ParseFloat(monitor.Status, 64)
+			responseTime := float64(monitor.ResponseTimes[0].Value)
+			if status != statusUp {
+				up = 0
+			}
+
+			ch <- prometheus.MustNewConstMetric(
+				MonitorUpDesc,
+				prometheus.GaugeValue,
+				up,
+				monitor.FriendlyName,
+				monitor.Type,
+				monitor.URL,
+			)
+			ch <- prometheus.MustNewConstMetric(
+				MonitorStatusDesc,
+				prometheus.GaugeValue,
+				status,
+				monitor.FriendlyName,
+				monitor.Type,
+				monitor.URL,
+			)
+			ch <- prometheus.MustNewConstMetric(
+				MonitorResponseTimeDesc,
+				prometheus.GaugeValue,
+				responseTime,
+				monitor.FriendlyName,
+				monitor.Type,
+				monitor.URL,
+			)
+		}
+		totalScraped += len(monitors)
+		if totalScraped < totalMonitors {
+			offset++
+		} else {
+			return nil
+		}
+	}
+}
+
+func getMonitors(client *api.Client, offset int) ([]api.XMLMonitor, error) {
+	monitorsRequest := client.Monitors()
+	var request = api.GetMonitorsRequest{
+		ResponseTimes:      1,
+		ResponseTimesLimit: 1,
+		Offset:             offset,
 	}
 
-	return nil
+	response, err := monitorsRequest.Get(request)
+	if err != nil {
+		log.Errorln("Error getting monitorsRequest", err)
+		return nil, err
+	}
+	log.Infof("Response from UptimeRobot API", response)
+
+	if response == nil {
+		log.Errorln("No monitor response: %v", response)
+		return nil, err
+	}
+
+	return response.Monitors, nil
 }
