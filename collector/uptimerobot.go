@@ -49,13 +49,12 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 	offset, totalScraped, totalMonitors := 0, 0, 0
 
 	for {
-		monitors, err := getMonitors(client, offset)
+		xmlMonitors, err := getMonitors(client, offset)
 		if err != nil {
 			return err
 		}
-		for _, monitor := range monitors {
-			log.Infof("ScrapeUptimeRobot found %d monitors", monitor.Pagination.Total)
-			totalMonitors = monitor.Pagination.Total
+		totalMonitors = xmlMonitors.Pagination.Total
+		for _, monitor := range xmlMonitors.Monitors {
 			up := 1.0
 			status, _ := strconv.ParseFloat(monitor.Status, 64)
 			responseTime := float64(monitor.ResponseTimes[0].Value)
@@ -88,7 +87,8 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 				monitor.URL,
 			)
 		}
-		totalScraped += len(monitors)
+		log.Infof("ScrapeUptimeRobot scraped %d monitors", totalMonitors)
+		totalScraped += len(xmlMonitors.Monitors)
 		if totalScraped < totalMonitors {
 			offset++
 		} else {
@@ -97,7 +97,7 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 	}
 }
 
-func getMonitors(client *api.Client, offset int) ([]api.XMLMonitor, error) {
+func getMonitors(client *api.Client, offset int) (*api.XMLMonitors, error) {
 	monitorsRequest := client.Monitors()
 	var request = api.GetMonitorsRequest{
 		ResponseTimes:      1,
@@ -117,5 +117,5 @@ func getMonitors(client *api.Client, offset int) ([]api.XMLMonitor, error) {
 		return nil, err
 	}
 
-	return response.Monitors, nil
+	return response, nil
 }
