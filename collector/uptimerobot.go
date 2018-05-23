@@ -102,7 +102,7 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 		}
 		log.Infof("ScrapeUptimeRobot scraped %d monitors", totalMonitors)
 		if totalScraped < totalMonitors {
-			offset++
+			offset += totalScraped
 		} else {
 			log.Infof("Scraped %d monitors", totalScraped)
 			return nil
