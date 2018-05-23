@@ -63,7 +63,7 @@ tarballs: format test promu
 	
 docker: deps format 
 	@echo ">> building binary"
-	GOOS=linux GOARCH=amd64 $(GO) build -o uptimerobot-exporter
+	GOOS=linux GOARCH=amd64 $(PROMU) build --prefix $(PREFIX)
 	@echo ">> building docker image"
 	@docker build -t "$(DOCKER_IMAGE_NAME)" .
 

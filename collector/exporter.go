@@ -115,31 +115,11 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	monitors := client.Monitors()
-	var request = api.GetMonitorsRequest{
-		ResponseTimes:      1,
-		ResponseTimesLimit: 1,
-	}
-
-	response, err := monitors.Get(request)
-	if err != nil {
-		log.Errorln("Error getting monitors", err)
-		e.errorDesc.Set(1)
-		return
-	}
-	log.Infof("Response from UptimeRobot API", response)
-
-	if response == nil {
-		log.Errorln("No monitor response: %v", response)
-		e.errorDesc.Set(1)
-		return
-	}
-
 	e.up.Set(1)
 	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "connection")
 
 	scrapeTime = time.Now()
-	if err = ScrapeUptimeRobot(response.Monitors, ch); err != nil {
+	if err = ScrapeUptimeRobot(client, ch); err != nil {
 		log.Errorln("Error scraping for collect.uptimerobot:", err)
 		e.scrapeErrors.WithLabelValues("collect.uptimerobot").Inc()
 		e.errorDesc.Set(1)

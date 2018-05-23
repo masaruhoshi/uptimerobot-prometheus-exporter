@@ -1,5 +1,5 @@
 go:
-    cgo: true
+    cgo: false
 verbose: true
 repository:
     path: github.com/masaruhoshi/uptimerobot-prometheus-exporter    
