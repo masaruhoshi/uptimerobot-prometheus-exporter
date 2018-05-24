@@ -30,7 +30,7 @@ how to obtain this key, access [Uptime Robot API](https://uptimerobot.com/api).
 # TODO
 * Current exporter is based on [uptimerobot-go](https://github.com/uptimerobot/uptimerobot-go/).
 This API is a little outdated and does not yet fully support `v2`. I created a
-[fork](https://github.com/masaruhoshi/uptimerobot-go) adding some features. I have to eventually
+[fork](https://github.com/masaruhoshi/uptimerobot-go.v2) adding some features. I have to eventually
 push my changes to the main repo and use it as dependency package.
 * Tests, tests, test. We need to add more tests.
 
