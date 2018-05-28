@@ -57,6 +57,8 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 		totalMonitors = xmlMonitors.Pagination.Total
 		for _, monitor := range xmlMonitors.Monitors {
 			up := 1.0
+			status := 0.0
+			responseTime := 0.0
 
 			if scappedMonitors[monitor.ID] {
 				log.Warnf("Trying to scrape a duplicate monitor for %s", monitor.FriendlyName)
@@ -64,10 +66,10 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 			}
 			if monitor.ResponseTimes == nil {
 				log.Warnf("No response times collected for %s", monitor.FriendlyName)
-				continue
+			} else {
+				status, _ = strconv.ParseFloat(monitor.Status, 64)
+				responseTime = float64(monitor.ResponseTimes[0].Value)
 			}
-			status, _ := strconv.ParseFloat(monitor.Status, 64)
-			responseTime := float64(monitor.ResponseTimes[0].Value)
 			if status != statusUp {
 				up = 0
 			}
