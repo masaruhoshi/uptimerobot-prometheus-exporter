@@ -12,7 +12,7 @@ You can test the exporter using `docker` and `docker-compose`
 
 Preparing:
 ```sh
-$ mkdir -p ./prometheus/{data,etc} ./grafana
+$ mkdir -p ./prometheus/{data,etc} ./grafana
 $ cp prometheus.yml ./prometheus/etc
 ```
 
