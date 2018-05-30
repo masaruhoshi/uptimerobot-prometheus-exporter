@@ -16,10 +16,11 @@ build:
 tarball:
     files:
         - LICENSE
+        - MAINTAINERS.md
+        - README.md
+        - grafana
 crossbuild:
     platforms:
         - darwin/amd64
         - linux/amd64   
         # - linux/386
-        # - netbsd/386
-        # - netbsd/amd64
