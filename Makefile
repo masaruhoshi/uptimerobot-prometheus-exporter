@@ -58,11 +58,12 @@ tarball: promu
 
 tarballs: format test promu
 	@echo ">> building crossbuild"
-	@$(PROMU) crossbuild 
+	@$(PROMU) crossbuild
 	@echo ">> building crossbuild tarballs"
-	@$(PROMU) crossbuild tarballs 
-	
-docker: deps format 
+	@$(PROMU) crossbuild tarballs
+	@$(PROMU) checksum .tarballs
+
+docker: deps format
 	@echo ">> building binary"
 	GOOS=linux GOARCH=amd64 $(PROMU) build --prefix $(PREFIX)
 	@echo ">> building docker image"
