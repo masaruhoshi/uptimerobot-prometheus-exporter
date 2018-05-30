@@ -32,8 +32,9 @@ clean:
 	@rm -fr .build .tarballs
 
 deps:
-	$(GO) get github.com/prometheus/promu
-	glide install
+	@hash promu 2>/dev/null || $(GO) get github.com/prometheus/promu
+	@hash dep 2>/dev/null || $(GO) get -u github.com/golang/dep/cmd/dep
+	dep ensure
 
 test:
 	@echo ">> running tests"
