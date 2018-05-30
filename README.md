@@ -20,7 +20,7 @@ $ docker run --rm -e "UPTIMEROBOT_API_KEY=api-key-here" uptimerobot-exporter
 ```
 
 ## Vendoring
-Package vendoring is handled with [Glide](https://github.com/Masterminds/glide).
+Package vendoring is handled with [dep](https://github.com/golang/dep).
 
 ## Environment variables
 The system only depends on one single environment variable:
