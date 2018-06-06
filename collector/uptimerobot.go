@@ -46,21 +46,28 @@ var (
 
 // ScrapeUptimeRobot : scrapes from UptimeRobot API.
 func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
-	offset, totalScraped, totalMonitors := 0, 0, 0
-	scappedMonitors := make(map[int]bool)
+	totalScraped, totalMonitors := 0, 0
+	scrappedMonitors := make(map[int]bool)
 
 	for {
-		xmlMonitors, err := getMonitors(client, offset)
+		xmlMonitors, err := getMonitors(client, totalScraped)
 		if err != nil {
 			return err
 		}
 		totalMonitors = xmlMonitors.Pagination.Total
-		for _, monitor := range xmlMonitors.Monitors {
+		monitors := xmlMonitors.Monitors
+
+		// There is no reason to continue
+		if len(monitors) == 0 {
+			log.Warnf("No monitor returned")
+			return nil
+		}
+		for _, monitor := range monitors {
 			up := 1.0
 			status := 0.0
 			responseTime := 0.0
 
-			if scappedMonitors[monitor.ID] {
+			if scrappedMonitors[monitor.ID] {
 				log.Warnf("Trying to scrape a duplicate monitor for %s", monitor.FriendlyName)
 				continue
 			}
@@ -100,13 +107,16 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 				monitor.URL,
 			)
 			totalScraped++
-			scappedMonitors[monitor.ID] = true
+			scrappedMonitors[monitor.ID] = true
 		}
 		log.Infof("ScrapeUptimeRobot scraped %d monitors", totalMonitors)
-		if totalScraped < totalMonitors {
-			offset += totalScraped
-		} else {
+		if totalScraped >= totalMonitors {
 			log.Infof("Scraped %d monitors", totalScraped)
+			return nil
+		}
+		// If no monitor was scrapped, something is wrong with the API call
+		if totalScraped == 0 && totalMonitors > 0 {
+			log.Warnf("No monitor scrapped. Check UptimeRobot API")
 			return nil
 		}
 	}
