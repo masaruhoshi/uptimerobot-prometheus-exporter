@@ -109,6 +109,11 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 			log.Infof("Scraped %d monitors", totalScraped)
 			return nil
 		}
+		// If no monitor was scrapped, something is wrong with the API call
+		if totalScraped == 0 {
+			log.Warnf("No monitor scrapped. Something is wrong with UptimeRobot API")
+			return nil
+		}
 	}
 }
 
