@@ -42,6 +42,11 @@ var (
 		"Response Time of the monitor",
 		[]string{"name", "type", "url"}, nil,
 	)
+	MonitorSslInfo = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, monitor, "ssl"),
+		"Information about the SSL certificate (if present)",
+		[]string{"name", "type", "url"}, nil,
+	)
 )
 
 // ScrapeUptimeRobot : scrapes from UptimeRobot API.
@@ -106,12 +111,23 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 				monitor.Type,
 				monitor.URL,
 			)
+			if monitor.Ssl.Product != "" && monitor.Ssl.Brand != "" {
+				sslExpiration := float64(monitor.Ssl.Expires)
+				ch <- prometheus.MustNewConstMetric(
+					MonitorSslInfo,
+					prometheus.GaugeValue,
+					sslExpiration,
+					monitor.FriendlyName,
+					monitor.Type,
+					monitor.URL,
+				)
+			}
 			totalScraped++
 			scrappedMonitors[monitor.ID] = true
 		}
 		log.Infof("ScrapeUptimeRobot scraped %d monitors", totalMonitors)
 		if totalScraped >= totalMonitors {
-			log.Infof("Scraped %d monitors", totalScraped)
+			log.Infof("Scraped %d monitors (out of %d)", totalScraped, totalMonitors)
 			return nil
 		}
 		// If no monitor was scrapped, something is wrong with the API call
