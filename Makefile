@@ -11,15 +11,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GO    := go
-PROMU := $(GOPATH)/bin/promu
-pkgs   = $(shell $(GO) list ./... | grep -v /vendor/)
+GO    		:= go
+GORELEASER  := $(GOPATH)/bin/goreleaser
+DEP   		:= $(GOPATH)/bin/dep
+pkgs   		 = $(shell $(GO) list ./... | grep -v /vendor/)
 
-PREFIX                  ?= $(shell pwd)
-BIN_DIR                 ?= $(shell pwd)
-DOCKER_IMAGE_NAME       ?= uptimerobot-exporter
+PKG_NAME			?= uptimerobot-exporter
+PREFIX              ?= $(shell pwd)
+BIN_DIR             ?= $(shell pwd)
+DOCKER_IMAGE_NAME   ?= uptimerobot-exporter
+
+COMMIT ?= `git rev-parse --short HEAD 2>/dev/null`
+BRANCH ?= `git rev-parse --abbrev-ref HEAD 2>/dev/null`
+VERSION ?= $(shell cat VERSION)
+BUILD_DATE := `date -u +"%Y-%m-%dT%H:%M:%SZ"`
+
+COMMIT_FLAG := -X `go list ./cmd`.commit=$(COMMIT)
+VERSION_FLAG := -X `go list ./cmd`.version=$(VERSION)
+BRANCH_FLAG := -X `go list ./cmd`.branch=$(BRANCH)
+BUILD_DATE_FLAG := -X `go list ./cmd`.date=$(BUILD_DATE)
 
 all: deps style format test build
+
+VERSION:
+	./gen_version.sh > VERSION
 
 style:
 	@echo ">> checking code style"
@@ -29,12 +44,18 @@ clean:
 	@rm -f *.lock *.tar.gz uptimerobot-exporter
 	@rm -f release/*
 	@rm -fr vendor/*
-	@rm -fr .build .tarballs
+	@rm -fr .build .tarballs dist bin VERSION
 
 deps:
-	@hash promu 2>/dev/null || $(GO) get github.com/prometheus/promu
-	@hash dep 2>/dev/null || $(GO) get -u github.com/golang/dep/cmd/dep
-	dep ensure
+	@echo ">> Checking dependencies"
+	@hash $(GORELEASER) 2>/dev/null || (echo "Unable to find goreleaser"; exit)
+	@hash $(DEP) 2>&1 /dev/null || (curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh)
+	@$(DEP) ensure
+
+$(PREFIX)/bin/$(PKG_NAME): VERSION deps $(shell find $(PREFIX) -type f -name '*.go')
+	CGO_ENABLED=0 $(GO) build \
+			-ldflags "-w -s $(COMMIT_FLAG) $(VERSION_FLAG) $(BRANCH_FLAG) $(BUILD_DATE_FLAG)" \
+			-o $@
 
 test:
 	@echo ">> running tests"
@@ -48,30 +69,14 @@ vet:
 	@echo ">> vetting code"
 	@$(GO) vet $(pkgs)
 
-build: promu
-	@echo ">> building binaries"
-	@$(PROMU) build --prefix $(PREFIX)
+build: $(PREFIX)/bin/$(PKG_NAME)
 
-tarball: promu
-	@echo ">> building release tarball"
-	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
-
-tarballs: format test promu
-	@echo ">> building crossbuild"
-	@$(PROMU) crossbuild
-	@echo ">> building crossbuild tarballs"
-	@$(PROMU) crossbuild tarballs
-	@$(PROMU) checksum .tarballs
-
-docker: deps format
-	@echo ">> building binary"
-	GOOS=linux GOARCH=amd64 $(PROMU) build --prefix $(PREFIX)
+docker: deps format $(PREFIX)/bin/$(PKG_NAME)
 	@echo ">> building docker image"
-	@docker build -t "$(DOCKER_IMAGE_NAME)" .
+	@docker build -t "$(DOCKER_IMAGE_NAME):$(VERSION)" \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg VCS_REF=$(COMMIT) \
+		--build-arg VERSION=$(VERSION) \
+		.
 
-promu: deps
-	@GOOS=$(shell uname -s | tr A-Z a-z) \
-	        GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-	        $(GO) get github.com/prometheus/promu
-
-.PHONY: all style format build test vet tarball tarballs docker promu
+.PHONY: all style format build test vet docker
