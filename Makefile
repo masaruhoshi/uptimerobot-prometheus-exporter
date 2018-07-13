@@ -73,6 +73,10 @@ build: $(PREFIX)/bin/$(PKG_NAME)
 
 docker: deps format $(PREFIX)/bin/$(PKG_NAME)
 	@echo ">> building docker image"
-	@docker build -t "$(DOCKER_IMAGE_NAME)" .
+	@docker build -t "$(DOCKER_IMAGE_NAME):$(VERSION)" \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg VCS_REF=$(COMMIT) \
+		--build-arg VERSION=$(VERSION) \
+		.
 
 .PHONY: all style format build test vet docker
