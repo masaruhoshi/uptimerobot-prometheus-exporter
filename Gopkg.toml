@@ -7,8 +7,8 @@
   branch = "master"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/prometheus/common"
+  name = "github.com/sirupsen/logrus"
+  version = "v1.0.6"
 
 [[constraint]]
   name = "github.com/spf13/cobra"

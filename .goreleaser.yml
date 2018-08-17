@@ -7,7 +7,6 @@ builds:
 - flags:
   - ldflags:
     - -w -s
->>>>>>> Disable debug symbols
 archive:
   replacements:
     darwin: Darwin
