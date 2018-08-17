@@ -30,3 +30,9 @@ Gopkg.lock
 
 # VS Code
 .vscode
+
+
+# Local build
+bin
+coverage
+vendor

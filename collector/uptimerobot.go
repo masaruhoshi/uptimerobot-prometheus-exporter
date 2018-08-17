@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/masaruhoshi/uptimerobot-go.v2/api"
+	"github.com/masaruhoshi/uptimerobot-prometheus-exporter/log"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
 )
 
 const (

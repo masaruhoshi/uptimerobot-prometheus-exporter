@@ -21,20 +21,22 @@ PREFIX              ?= $(shell pwd)
 BIN_DIR             ?= $(shell pwd)
 DOCKER_IMAGE_NAME   ?= uptimerobot-exporter
 
-COMMIT ?= `git rev-parse --short HEAD 2>/dev/null`
-BRANCH ?= `git rev-parse --abbrev-ref HEAD 2>/dev/null`
-VERSION ?= $(shell cat VERSION)
-BUILD_DATE := `date -u +"%Y-%m-%dT%H:%M:%SZ"`
+COMMIT      ?= `git rev-parse --short HEAD 2>/dev/null`
+BRANCH      ?= `git rev-parse --abbrev-ref HEAD 2>/dev/null`
+VERSION     ?= $(shell cat version.txt 2>/dev/null)
+BUILD_DATE  := `date -u +"%Y-%m-%dT%H:%M:%SZ"`
+LOGLEVEL    ?= warn
 
-COMMIT_FLAG := -X `go list ./cmd`.commit=$(COMMIT)
-VERSION_FLAG := -X `go list ./cmd`.version=$(VERSION)
-BRANCH_FLAG := -X `go list ./cmd`.branch=$(BRANCH)
-BUILD_DATE_FLAG := -X `go list ./cmd`.date=$(BUILD_DATE)
+COMMIT_FLAG := -X `go list ./version`.Revision=$(COMMIT)
+VERSION_FLAG := -X `go list ./version`.Version=$(VERSION)
+BRANCH_FLAG := -X `go list ./version`.Branch=$(BRANCH)
+BUILD_DATE_FLAG := -X `go list ./version`.BuildTime=$(BUILD_DATE)
+LOGLEVEL_FLAG := -X `go list ./log`.level=$(LOGLEVEL)
 
 all: deps style format test build
 
-VERSION:
-	./gen_version.sh > VERSION
+version.txt:
+	./gen_version.sh > version.txt
 
 style:
 	@echo ">> checking code style"
@@ -44,7 +46,7 @@ clean:
 	@rm -f *.lock *.tar.gz uptimerobot-exporter
 	@rm -f release/*
 	@rm -fr vendor/*
-	@rm -fr .build .tarballs dist bin VERSION
+	@rm -fr .build .tarballs dist bin version.txt
 
 deps:
 	@echo ">> Checking dependencies"
@@ -52,9 +54,9 @@ deps:
 	@hash $(DEP) 2>&1 /dev/null || (curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh)
 	@$(DEP) ensure
 
-$(PREFIX)/bin/$(PKG_NAME): VERSION deps $(shell find $(PREFIX) -type f -name '*.go')
+$(PREFIX)/bin/$(PKG_NAME): version.txt deps $(shell find $(PREFIX) -type f -name '*.go')
 	CGO_ENABLED=0 $(GO) build \
-			-ldflags "-w -s $(COMMIT_FLAG) $(VERSION_FLAG) $(BRANCH_FLAG) $(BUILD_DATE_FLAG)" \
+			-ldflags "-w -s $(COMMIT_FLAG) $(VERSION_FLAG) $(BRANCH_FLAG) $(BUILD_DATE_FLAG) $(LOGLEVEL_FLAG)" \
 			-o $@
 
 test:
