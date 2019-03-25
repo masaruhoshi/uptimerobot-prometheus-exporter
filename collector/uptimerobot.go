@@ -86,7 +86,7 @@ func ScrapeUptimeRobot(client *api.Client, ch chan<- prometheus.Metric) error {
 				up = 0
 			}
 
-			log.Infof("Scrapping metric for %s (%s)", monitor.FriendlyName, monitor.URL)
+			log.Infof("Scraping metric for %s (%s)", monitor.FriendlyName, monitor.URL)
 			ch <- prometheus.MustNewConstMetric(
 				MonitorUpDesc,
 				prometheus.GaugeValue,
