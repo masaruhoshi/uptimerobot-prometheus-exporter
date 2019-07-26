@@ -9,6 +9,7 @@ import (
 	"github.com/masaruhoshi/uptimerobot-prometheus-exporter/log"
 	"github.com/masaruhoshi/uptimerobot-prometheus-exporter/version"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -58,6 +59,8 @@ func prometheusHandler() http.Handler {
 	uptimerobotCollector := collector.New(apiKey, collect)
 	prometheus.MustRegister(uptimerobotCollector)
 
-	handler := prometheus.Handler()
+	handler := promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer,
+		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{ErrorHandling: promhttp.ContinueOnError}))
+
 	return handler
 }
